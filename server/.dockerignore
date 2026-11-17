@@ -1,0 +1,7 @@
+*
+!Dockerfile
+!server.py
+!web_admin.py
+!device_status.py
+!web/
+!web/**

@@ -1,0 +1,8 @@
+{
+  "name": "PN5180Robust",
+  "version": "0.0.1",
+  "description": "PN5180 driver with bounded SPI waits and ISO14443-A buffer fixes",
+  "build": {
+    "srcDir": "inc"
+  }
+}

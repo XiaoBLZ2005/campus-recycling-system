@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#175c4a">
+    <title>学生积分管理后台</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand">
+          <span class="brand-mark">积分</span>
+          <div>
+            <h1>学生积分管理后台</h1>
+            <p>教师端 · 刷卡查询与积分结算</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="device-status" id="deviceStatus">
+            <span class="status-dot"></span>
+            <span>检测设备</span>
+          </div>
+          <div class="server-status" id="serverStatus">
+            <span class="status-dot"></span>
+            <span>正在连接</span>
+          </div>
+          <button class="button button-primary" id="addStudentButton" type="button">
+            登记学生卡
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="stats-grid" aria-label="数据概览">
+        <article class="stat-card student-count-card">
+          <span class="stat-label">已登记学生</span>
+          <strong id="statStudents">--</strong>
+        </article>
+        <article class="stat-card query-stat" id="statPointsCard" hidden>
+          <span class="stat-label">当前总积分</span>
+          <strong id="statPoints">--</strong>
+        </article>
+        <article class="stat-card query-stat" id="statWeightCard" hidden>
+          <span class="stat-label">回收重量</span>
+          <strong id="statWeight">--</strong>
+          <span class="stat-unit">kg</span>
+        </article>
+        <article class="stat-card query-stat" id="statBottlesCard" hidden>
+          <span class="stat-label">累计瓶子</span>
+          <strong id="statBottles">--</strong>
+        </article>
+      </section>
+
+      <div class="workspace">
+        <div class="workspace-main">
+          <section class="panel lookup-panel">
+            <div class="panel-heading">
+              <div>
+                <h2>刷卡查询</h2>
+                <p>输入或扫描学生卡号，查询姓名和当前积分。</p>
+              </div>
+              <span class="auto-read-status" id="autoReadStatus">
+                <i></i>
+                <span>等待刷卡</span>
+              </span>
+            </div>
+
+            <form class="lookup-form" id="lookupForm">
+              <label class="sr-only" for="lookupUid">学生卡号</label>
+              <input
+                id="lookupUid"
+                name="lookupUid"
+                type="text"
+                autocomplete="off"
+                placeholder="输入或扫描学生卡号"
+              >
+              <button class="button button-dark" type="submit">查询</button>
+            </form>
+
+            <div class="lookup-result is-empty" id="lookupResult" aria-live="polite">
+              <span class="result-icon">—</span>
+              <div>
+                <strong>等待查询</strong>
+                <p>刷卡后，学生信息会自动显示在这里。</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel students-panel">
+            <div class="panel-heading responsive-heading">
+              <div>
+                <h2>学生档案</h2>
+                <p>按姓名或卡号检索</p>
+              </div>
+              <label class="search-box">
+                <span aria-hidden="true">检索</span>
+                <input id="studentSearch" type="search" placeholder="姓名或卡号">
+              </label>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>学生</th>
+                    <th>卡号</th>
+                    <th class="align-right">当前积分</th>
+                    <th class="align-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="studentTableBody"></tbody>
+              </table>
+              <div class="empty-state" id="studentEmpty" hidden>
+                暂无学生记录
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="workspace-side">
+          <section class="panel activity-panel">
+            <div class="panel-heading">
+              <div>
+                <h2>最近刷卡</h2>
+                <p>自动刷新</p>
+              </div>
+              <span class="live-pill"><i></i>实时</span>
+            </div>
+            <div class="activity-list" id="cardReadList">
+              <p class="muted-message">暂无刷卡记录</p>
+            </div>
+          </section>
+
+          <section class="panel activity-panel">
+            <div class="panel-heading">
+              <div>
+                <h2>积分流水</h2>
+                <p>最近结算记录</p>
+              </div>
+            </div>
+            <div class="activity-list" id="transactionList">
+              <p class="muted-message">暂无积分流水</p>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      数据保存于云端数据库 · 管理入口仅供教师使用
+    </footer>
+
+    <dialog class="modal" id="studentDialog">
+      <form id="studentForm" method="dialog">
+        <div class="modal-header">
+          <div>
+            <h2 id="studentDialogTitle">登记学生卡</h2>
+            <p>卡号登记后不可修改</p>
+          </div>
+          <button class="icon-button" id="closeStudentDialog" type="button" aria-label="关闭">×</button>
+        </div>
+        <input id="studentMode" type="hidden" value="create">
+        <label class="field">
+          <span>学生卡号 <b>*</b></span>
+          <input id="studentCardUid" type="text" autocomplete="off" required placeholder="例如 01:23:45:67:89:AB:CD:EF">
+        </label>
+        <label class="field">
+          <span>学生姓名 <b>*</b></span>
+          <input id="studentName" type="text" maxlength="80" autocomplete="off" required placeholder="请输入学生姓名">
+        </label>
+        <p class="form-message" id="studentFormMessage" aria-live="polite"></p>
+        <div class="modal-actions">
+          <button class="button button-danger button-ghost-danger" id="deleteStudentButton" type="button" hidden>
+            删除档案
+          </button>
+          <span class="action-spacer"></span>
+          <button class="button button-secondary" id="cancelStudentButton" type="button">取消</button>
+          <button class="button button-primary" id="saveStudentButton" type="submit">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="settlementDialog">
+      <form id="settlementForm" method="dialog">
+        <div class="modal-header">
+          <div>
+            <h2>积分结算</h2>
+            <p>提交后直接累加到账户余额</p>
+          </div>
+          <button class="icon-button" id="closeSettlementDialog" type="button" aria-label="关闭">×</button>
+        </div>
+        <input id="settlementCardUid" type="hidden">
+        <div class="settlement-student">
+          <span class="student-avatar" id="settlementAvatar">?</span>
+          <div>
+            <strong id="settlementName">--</strong>
+            <p>当前 <b id="settlementCurrentPoints">0</b> 积分</p>
+          </div>
+        </div>
+        <label class="field">
+          <span>本次新增积分 <b>*</b></span>
+          <input id="settlementPoints" type="number" min="1" max="1000000" step="1" required placeholder="请输入积分">
+        </label>
+        <p class="form-message" id="settlementFormMessage" aria-live="polite"></p>
+        <div class="modal-actions">
+          <span class="action-spacer"></span>
+          <button class="button button-secondary" id="cancelSettlementButton" type="button">取消</button>
+          <button class="button button-primary" id="saveSettlementButton" type="submit">确认入账</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
